@@ -1,14 +1,11 @@
 import os
 from datasets import load_dataset
+from reinvent.chemistry.standardization.rdkit_standardizer import RDKitStandardizer
 
 def ensure_directory_exists(path):
     """Creates the directory if it doesn't already exist."""
     if not os.path.isdir(path):
         os.makedirs(path)
-
-def filter_by_allowed_tokens(smiles_series, allowed_tokens):
-    """Filters a series of SMILES strings based on a set of allowed characters."""
-    return smiles_series[smiles_series.apply(lambda x: all(token in allowed_tokens for token in x))]
 
 def process_tack_data(base_path, allowed_tokens):
     """Downloads, filters, and splits the TACK dataset."""
@@ -18,6 +15,16 @@ def process_tack_data(base_path, allowed_tokens):
     
     tack_smiles = tack_ds_train["SMILES"]
 
+    #FIXME Temporary: Replace all @ with $ to avoid tokenization issues with the model
+
+    # RDKit standarization
+    standardizer = RDKitStandardizer(filter_configs=None, isomeric=False)
+    tack_smiles = tack_smiles.apply(standardizer.apply_filter)
+
+    # Remove all None values that may have been introduced by the standardization step
+    tack_smiles = tack_smiles.dropna()
+
+    print(f"After standardization, TACK dataset has {len(tack_smiles)} molecules", tack_smiles)
     # Filter out SMILES that contain tokens not supported by the model
     tack_smiles = tack_smiles[tack_smiles.apply(lambda x: all(token in allowed_tokens for token in x))]
 
@@ -39,8 +46,19 @@ def process_synthetic_data(base_path, allowed_tokens):
     for split in synthetic_ds:
         # Remove labels and filter by tokens
         ds_split = synthetic_ds[split].remove_columns("labels")
-        ds_split = ds_split.filter(lambda x: all(token in allowed_tokens for token in x["text"]))
 
+        #FIXME Temporary: Replace all @ with $ to avoid tokenization issues with the model
+
+        # standardize SMILES and filter out those that contain tokens not supported by the model
+        standardizer = RDKitStandardizer(filter_configs=None, isomeric=False)
+        ds_split = ds_split.map(lambda x: {"text": standardizer.apply_filter(x["text"])})
+
+        # remove all None values that may have been introduced by the standardization step
+        ds_split = ds_split.filter(lambda x: x["text"] is not None)
+        
+
+        ds_split = ds_split.filter(lambda x: all(token in allowed_tokens for token in x["text"]))
+        
         print(f"After filtering, {split} split has {len(ds_split)} molecules")
         ds_split.to_csv(f"{base_path}/synthetic_{split}.smi", header=False)
     
@@ -53,8 +71,9 @@ def prep_data(args):
 
     # FIXME: temporary solution to filter out SMILES with unallowed tokens for reinvent.prior
     reinvent_prior_allowed_tokens = {
-        ')', 'S', '^', '2', 'O', '%10', '4', '=', 'C', '1', '9', '6', 's', '[nH]', '5', 'Br', 
-        'o', '7', '(', '[S+]', 'n', '-', '8', 'N', '[N+]', 'F', '3', '[N-]', 'c', '[O-]', '[n+]', 'Cl', '#', '$'
+        '[S+]', '[N+]', '[N-]', '[O-]', '[n+]', '[nH]', '%10', 'Cl',')', 'S', '^', '2', 'O',  '4', 
+        '=', 'C', '1', '9', '6', 's',  '5', 'Br', 
+        'o', '7', '(', 'n', '-', '8', 'N', 'F', '3',  'c',  '#', '$'
     }
 
     process_tack_data(base_path, reinvent_prior_allowed_tokens)
