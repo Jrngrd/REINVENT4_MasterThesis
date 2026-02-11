@@ -54,7 +54,7 @@ class ProtacValidity:
             "HBD"         : Descriptors.NumHDonors,
             "RotBonds"    : Descriptors.NumRotatableBonds,
             "NumCycles"   : Descriptors.RingCount,
-            #"test"        : lambda mol: rdMolDescriptors.CalcNumAtomStereoCenters(mol) + rdMolDescriptors.CalcNumUnspecifiedAtomStereoCenters(mol)
+            "StereoCenters"        : lambda mol: rdMolDescriptors.CalcNumAtomStereoCenters(mol) + rdMolDescriptors.CalcNumUnspecifiedAtomStereoCenters(mol)
         }
 
         self.weights = {name : 1/len(self.metrics) for name, _ in self.metrics.items()}
@@ -85,6 +85,10 @@ class ProtacValidity:
         
         self.stats_df = smiles_props.agg(['mean', 'std']).T
 
+    def calc_reward(self, x):
+        score = -0.879094 * x^4 + 0.532358 * x^2+ 0.929482
+        return score
+
     @normalize_smiles
     def __call__(self, smilies):
 
@@ -99,15 +103,17 @@ class ProtacValidity:
         
             score = 0
             for name, metric_fn in self.metrics.items():
-                if name != "Length":
+                if name == "Length":
                     value = metric_fn(smi)
                 else:
                     value = metric_fn(mol)
                 
-                lb = self.stats_df.loc[name, 'mean'] - 1.96 * self.stats_df.loc[name, 'std']
-                ub = self.stats_df.loc[name, 'mean'] + 1.96 * self.stats_df.loc[name, 'std']
-                if value > lb and value < ub:
-                    score += self.weights[name] * 1
+
+                score += self.weights[name] * self.calc_reward(value)
+                #lb = self.stats_df.loc[name, 'mean'] - 1.5 * self.stats_df.loc[name, 'std']
+                ##ub = self.stats_df.loc[name, 'mean'] + 1.5 * self.stats_df.loc[name, 'std']
+                #if value > lb and value < ub:
+                #    score += self.weights[name] * 1
 
             score_array.append(float(score))
     
