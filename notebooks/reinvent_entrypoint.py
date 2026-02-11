@@ -4,6 +4,11 @@ from run_tl import run_transfer_learning
 from prep_data import prep_data
 import os
 
+
+def makedir(path):
+    if not os.path.isdir(path):
+        os.mkdir(path)
+
 if __name__ == "__main__":
     args = get_args()
 
@@ -16,15 +21,13 @@ if __name__ == "__main__":
         origin = f"{os.getcwd()}/runs"
 
         # Create the run folder if it does not exist
-        if not os.path.isdir(origin):
-            os.mkdir(origin)
+        makedir(origin)
         
         wd = f"{origin}/{args.wd}"
 
         # Create the wd folder
         print("Working directory:", wd)
-        if not os.path.isdir(wd):
-            os.mkdir(wd)
+        makedir(wd)
 
 
         
@@ -40,16 +43,16 @@ if __name__ == "__main__":
             run_reinforcement_learning(args, f"{wd}/Stage_1_RL")
             """
 
-            os.mkdir(f"{wd}/Stage_1_TL")
-            run_transfer_learning(args, f"{wd}/Stage_1_TL", "synthetic", num_epochs=5)
-           
-            os.mkdir(f"{wd}/Stage_2_TL")
-            run_transfer_learning(args, f"{wd}/Stage_2_TL", "tack", num_epochs=2)
+            makedir(f"{wd}/Stage_1_TL")
+            run_transfer_learning(args, f"{wd}/Stage_1_TL", "synthetic", num_epochs=50)
 
-            os.mkdir(f"{wd}/Stage_3_RL")
+            makedir(f"{wd}/Stage_2_TL")
+            run_transfer_learning(args, f"{wd}/Stage_2_TL", "tack", num_epochs=10)
+
+            makedir(f"{wd}/Stage_3_RL")
             run_reinforcement_learning(args, f"{wd}/Stage_3_RL", min_steps=500, max_steps=1000)
 
-            os.mkdir(f"{wd}/Stage_4_RL")
+            makedir(f"{wd}/Stage_4_RL")
             run_reinforcement_learning(args, f"{wd}/Stage_4_RL", min_steps=3000, max_steps=6000, is_stage_2_RL=True)
 
             """os.mkdir(f"{wd}/Stage_5_RL")
