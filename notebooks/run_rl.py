@@ -5,58 +5,20 @@ import re
 
 def get_scorer(is_stage_2_RL):
     # QED prob not good since lower desirability for heavier molecules (kind of follows Ro5)
-    if not is_stage_2_RL:
+    if is_stage_2_RL:
         return """
             [stage.scoring]
             type = "arithmetic_mean"
 
             [[stage.scoring.component]]
 
-            [stage.scoring.component.MolecularWeight]
+            [stage.scoring.component.ProtacValidity]
 
-            [[stage.scoring.component.MolecularWeight.endpoint]]
+            [[stage.scoring.component.ProtacValidity.endpoint]]
 
-            name = "MW"
-
+            name = "Protac Validity"
             weight = 1.0
-            transform.type = "Double_Sigmoid"
-
-            transform.low = 700.0
-
-            transform.high = 1200.0
-
-
-            [[stage.scoring.component]]
-            [stage.scoring.component.QED]
-            [[stage.scoring.component.QED.endpoint]]
-            name = "QED"
-            weight = 2.0
-
-            [[stage.scoring.component]]
-            [stage.scoring.component.SlogP]
-            [[stage.scoring.component.SlogP.endpoint]]
-            name = "LogP_Limit"
-            weight = 0.5
-            transform.type = "Double_Sigmoid"
-            transform.low = 3.0
-            transform.high = 7.0
-            transform.coef_div = 0.5
-
-            [[stage.scoring.component]]
-
-            [stage.scoring.component.SAScore]
-
-            [[stage.scoring.component.SAScore.endpoint]]
-
-            name = "SAscore"
-
-            weight = 1.00
-
-            transform.type = "Right_Step"
-
-            transform.high = 6.0
-            transform.low = 4.0
-
+            params.validation_datasets = "/mimer/NOBACKUP/groups/naiss2023-6-290/erngard/REINVENT4_MasterThesis/dataset/tack_validation.smi"
 
             [stage.diversity_filter]
             type = "IdenticalMurckoScaffold"

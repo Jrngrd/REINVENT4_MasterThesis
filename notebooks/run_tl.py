@@ -4,7 +4,7 @@ import reinvent
 import subprocess
 
 
-def run_transfer_learning(args, wd, data_prefix, batch_size=512, num_epochs=5):
+def run_transfer_learning(args, wd, data_prefix, batch_size=512, num_epochs=50):
 
     checkpoints_wd = f"{wd}/checkpoints"
     print("Creating TL checkpoints directory at:", checkpoints_wd)
@@ -51,6 +51,12 @@ def run_transfer_learning(args, wd, data_prefix, batch_size=512, num_epochs=5):
     randomize_smiles = false
     randomize_all_smiles = false
     internal_diversity = true
+
+    [scheduler]
+    lr = 0.01
+    min = 0
+    gamma = 0.05
+    step = 40
     """
 
     # +

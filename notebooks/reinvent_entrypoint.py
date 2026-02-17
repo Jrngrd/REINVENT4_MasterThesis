@@ -32,10 +32,10 @@ if __name__ == "__main__":
 
         
         if runform== "tl":
-            run_transfer_learning(args, wd, args.data_type)
+            run_transfer_learning(args, wd, args.data_type, num_epochs=50)
         
         elif runform == "rl":
-            run_reinforcement_learning(args, wd)
+            run_reinforcement_learning(args, wd, is_stage_2_RL=True)
 
         elif runform == "both":
             
