@@ -1,6 +1,5 @@
 import os
 import shutil
-import reinvent
 import subprocess
 
 
@@ -17,7 +16,7 @@ def run_transfer_learning(args, wd, data_prefix, batch_size=512, num_epochs=50):
     # check if prior RL stage 1 checkpoint exists
     if not os.path.isfile(prior_filename):"""
         # fall back to default prior, user selected TL only run
-    prior_filename = os.path.abspath(os.path.join(reinvent.__path__[0], "..", "priors", "reinvent.prior"))        
+    prior_filename = os.path.abspath("./priors/reinvent.prior")      
     
     print("Using prior filename:", prior_filename)
 
